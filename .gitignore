@@ -50,6 +50,7 @@ libs/
 DLLs/
 Doc/
 deeplense_outputs/
+pyHalo/
 # --- 4. ALLOWED: Your Project Structure ---
 # These rules ensure Git "sees" your GSoC deliverables clearly
 !Common_Test_I/
