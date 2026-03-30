@@ -1,0 +1,60 @@
+# --- 1. PROHIBITED: Local Environment & Large Data ---
+# These are specific to your PC and should NEVER be on GitHub
+Include/
+Lib/
+Scripts/
+share/
+pyvenv.cfg
+pip-selfcheck.json
+.virtualenv/
+
+# Data Bottlenecks
+*.npy
+*.npz
+data/
+dataset/
+temp/
+pip_cache/
+tcl/
+2.0 
+# notebooks not for Upload
+DeepLense_GSoC2026_CommonTest_Classification_v2.ipynb
+DeepLense_GSoC2026_CommonTest_Classification.ipynb
+DeepLense_GSoC2026_TestII_AgenticAI.ipynb
+GSoC2026_DeepLenseAgent_Proposal.ipynb
+# --- 2. PROHIBITED: Model Artifacts ---
+# Weights are too large for Git. Use the Google Drive links in your README instead.
+*.pth
+*.h5
+*.weights
+*.ckpt
+
+# --- 3. PROHIBITED: System & IDE Junk ---
+__pycache__/
+.ipynb_checkpoints/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+LICENSE.txt
+NEWS.txt
+python.exe
+python3.dll
+python312.dll
+pythonw.exe
+temp.ps1
+vcruntime140.dll
+vcruntime140_1.dll
+libs/
+DLLs/
+Doc/
+deeplense_outputs/
+# --- 4. ALLOWED: Your Project Structure ---
+# These rules ensure Git "sees" your GSoC deliverables clearly
+!Common_Test_I/
+!Specific_Test_II/
+!outputs/
+!proposal/
+!README.md
+!.gitignore

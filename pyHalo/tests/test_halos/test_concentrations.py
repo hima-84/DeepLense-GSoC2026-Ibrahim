@@ -1,0 +1,269 @@
+import pytest
+import numpy as np
+from pyHalo.Halos.lens_cosmo import LensCosmo
+from pyHalo.Cosmology.cosmology import Cosmology
+import numpy.testing as npt
+from pyHalo.Halos.concentration import ConcentrationLudlow, ConcentrationDiemerJoyce, \
+    ConcentrationPeakHeight, ConcentrationWDMPolynomial, ConcentrationWDMHyperbolic, ConcentrationLudlowWDM, BinnedHaloMass
+from astropy.cosmology import FlatLambdaCDM
+
+class TestConcentration(object):
+
+    def setup_method(self):
+
+        astropy = FlatLambdaCDM(70.0, 0.3)
+        cosmo = Cosmology(astropy_instance=astropy)
+        self.astropy = cosmo.astropy
+
+    def test_concentration_ludlow_wdm(self):
+
+        scatter = False
+        z = 0.0
+        log_mc = 7.0
+        slope = -1.0
+        m = 10 ** 7.5
+
+        concentration_model_cdm = ConcentrationLudlow(self.astropy, scatter)
+        concentration_model_wdm = ConcentrationLudlowWDM(self.astropy, log_mc, slope, scatter)
+        a_true, b_true = 0.473, 0.739
+        a_model, b_model = concentration_model_wdm.suppression_fit(log_mc, slope, z)
+        npt.assert_almost_equal(a_model, a_true, 2)
+        npt.assert_almost_equal(b_model, b_true, 2)
+        arg = (np.log10(m / 10 ** log_mc) - a_model) / (2 * b_model)
+        suppression = 0.5 * (1.0 + np.tanh(arg))
+
+        c_wdm = concentration_model_wdm.nfw_concentration(m, z)
+        c_cdm = concentration_model_cdm.nfw_concentration(m, z)
+        ratio = c_wdm / c_cdm
+        npt.assert_almost_equal(ratio, 0.50968, 3)
+        npt.assert_almost_equal(c_wdm, c_cdm * suppression, 3)
+
+        z = 1.0
+        log_mc = 6.0
+        slope = -3.2
+        m = 10 ** 6.0
+
+        concentration_model_cdm = ConcentrationLudlow(self.astropy, scatter)
+        concentration_model_wdm = ConcentrationLudlowWDM(self.astropy, log_mc, slope, scatter)
+        a_true, b_true = 0.42797, 0.464066
+        a_model, b_model = concentration_model_wdm.suppression_fit(log_mc, slope, z)
+        npt.assert_almost_equal(a_model, a_true, 2)
+        npt.assert_almost_equal(b_model, b_true, 2)
+        arg = (np.log10(m / 10 ** log_mc) - a_model) / (2 * b_model)
+        suppression = 0.5 * (1.0 + np.tanh(arg))
+
+        c_wdm = concentration_model_wdm.nfw_concentration(m, z)
+        c_cdm = concentration_model_cdm.nfw_concentration(m, z)
+        ratio = c_wdm / c_cdm
+        npt.assert_almost_equal(ratio, 0.28453, 3)
+        npt.assert_almost_equal(c_wdm, c_cdm * suppression, 3)
+
+        log10_mhm_eval, dlogT_dlogk_eval, z_eval = 9.0, -4.5, 4.5
+        log10_mhm_eval, dlogT_dlogk_eval, z_eval = concentration_model_wdm._make_in_bounds(log10_mhm_eval, dlogT_dlogk_eval, z_eval)
+        npt.assert_equal(log10_mhm_eval, 8.0)
+        npt.assert_equal(dlogT_dlogk_eval, 4.0)
+        npt.assert_equal(z_eval, 4.0)
+
+        log10_mhm_eval, dlogT_dlogk_eval, z_eval = 5.6, -0.5, 4.0
+        log10_mhm_eval, dlogT_dlogk_eval, z_eval = concentration_model_wdm._make_in_bounds(log10_mhm_eval,
+                                                                                           dlogT_dlogk_eval, z_eval)
+        npt.assert_equal(log10_mhm_eval, 6.0)
+        npt.assert_equal(dlogT_dlogk_eval, 1.0)
+        npt.assert_equal(z_eval, 4.0)
+
+    def test_concentration_diemer_joyce(self):
+
+            m = 10 ** 8
+            z = 0.5
+            c_true = 14.246936385951503
+            scatter = False
+            concentration_model = ConcentrationDiemerJoyce(self.astropy, scatter)
+            c = concentration_model.nfw_concentration(m, z)
+            # this test changed because of a change in colossus 
+            npt.assert_almost_equal(c_true, c, 1)
+
+            scatter = True
+            concentration_model = ConcentrationDiemerJoyce(self.astropy, scatter)
+            c = concentration_model.nfw_concentration(m, z)
+            npt.assert_equal(c != c_true, True)
+
+            c = concentration_model.nfw_concentration(np.array([10**8]*10), z)
+            npt.assert_equal(10, len(c))
+
+    def test_concentration_ludlow(self):
+
+        m = 10 ** 8
+        z = 0.5
+        c_true = 13.36631
+        scatter = False
+        concentration_model = ConcentrationLudlow(self.astropy, scatter)
+        c = concentration_model.nfw_concentration(m, z)
+        npt.assert_almost_equal(c_true, c, 3)
+
+        scatter = True
+        concentration_model = ConcentrationDiemerJoyce(self.astropy, scatter)
+        c = concentration_model.nfw_concentration(m, z)
+        npt.assert_equal(c != c_true, True)
+
+        c = concentration_model.nfw_concentration(np.array([10 ** 8] * 10), z)
+        npt.assert_equal(10, len(c))
+
+    def test_concentration_peak_height(self):
+
+        m = 10 ** 8
+        concentration_model_1 = ConcentrationPeakHeight(self.astropy, 16.0, -0.2, 0.8, False)
+        concentration_model_2 = ConcentrationPeakHeight(self.astropy, 16.0, -0.2, 4.0, False)
+        concentration_model_3 = ConcentrationPeakHeight(self.astropy, 2.5 * 16.0, -0.2, 4.0, False)
+        c1 = concentration_model_1.nfw_concentration(m, 0.5)
+        c2 = concentration_model_2.nfw_concentration(m, 0.5)
+        c3 = concentration_model_3.nfw_concentration(m, 0.5)
+        npt.assert_equal(c1, c2)
+        npt.assert_almost_equal(c1, c3 / 2.5, 6)
+
+        c0 = 10
+        zeta = -0.0
+        beta = 0.5
+        concentration_model_4 = ConcentrationPeakHeight(self.astropy, c0, zeta, beta,
+                                                        False, scatter_dex=0.2,
+                                                        redshift_evolution='RHO_CRIT')
+        c1 = concentration_model_4.nfw_concentration(10**7, 0.0)
+        c2 = concentration_model_4.nfw_concentration(10**7, 1.5)
+        r = self.astropy.critical_density(1.5).value / self.astropy.critical_density(0.0).value
+        npt.assert_almost_equal(c1/c2, r ** zeta, 6)
+
+    def test_concentration_wdm_polynomial(self):
+
+        m = 10 ** 8
+        z = 0.5
+        c0 = 21.49
+        zeta = -0.5
+        beta = 0.8
+        kwargs_cdm = {'c0': c0, 'zeta': zeta, 'beta': beta, 'scatter': False}
+        concentration_cdm = ConcentrationPeakHeight
+        concentration_cdm_peak_height = concentration_cdm(self.astropy, **kwargs_cdm)
+        log_mc = 8.2
+        c_scale = 60.0
+        c_power = -0.17
+        c_power_inner = 1.5
+
+        mc_suppression_redshift_evolution = False
+        concentration_model = ConcentrationWDMPolynomial(self.astropy, concentration_cdm,
+                                                         log_mc, c_scale, c_power, c_power_inner, mc_suppression_redshift_evolution,
+                                                         scatter=False, kwargs_cdm=kwargs_cdm)
+
+        c_wdm = concentration_model.nfw_concentration(m, z)
+        c_cdm = concentration_cdm_peak_height.nfw_concentration(m, z)
+        suppression = (1 + c_scale * (10**log_mc / m)**c_power_inner)**c_power
+        npt.assert_almost_equal(c_wdm, c_cdm * suppression)
+
+        mc_suppression_redshift_evolution = True
+        concentration_model = ConcentrationWDMPolynomial(self.astropy, concentration_cdm,
+                                                         log_mc, c_scale, c_power, c_power_inner,
+                                                         mc_suppression_redshift_evolution,
+                                                         scatter=False, kwargs_cdm=kwargs_cdm)
+
+        c_wdm = concentration_model.nfw_concentration(m, z)
+        c_cdm = concentration_cdm_peak_height.nfw_concentration(m, z)
+        suppression *= (1 + z) ** (0.026 * z - 0.04)
+        npt.assert_almost_equal(c_wdm, c_cdm * suppression)
+
+    def test_concentration_wdm_hyperbolic(self):
+
+        m = 10 ** 8
+        z = 0.5
+        kwargs_cdm = {'scatter': False}
+        concentration_cdm = ConcentrationDiemerJoyce
+        concentration_cdm_diemer_joyce = concentration_cdm(self.astropy, **kwargs_cdm)
+        log_mc = 8.2
+        a = 0.2
+        b = 0.5
+        concentration_model = ConcentrationWDMHyperbolic(self.astropy, concentration_cdm, log_mc, a, b,
+                                                         scatter=False,kwargs_cdm=kwargs_cdm)
+        c_wdm = concentration_model.nfw_concentration(m, z)
+        c_cdm = concentration_cdm_diemer_joyce.nfw_concentration(m, z)
+        suppression = 0.5 * (1 + np.tanh((np.log10(m/10**log_mc) - a) / (2 * b)))
+        npt.assert_almost_equal(c_wdm, c_cdm * suppression)
+
+    def test_concentration_binned(self):
+
+        log10_mass_bins = [[6, 8], [8, 10.7]]
+        norm_low = 8.0
+        norm_high = 8.0
+        beta_low = 0.0
+        beta_high = 0.0
+        zeta_low = 0.0
+        zeta_high = 0.0
+        norm_list = [norm_low, norm_high]
+        beta_list = [beta_low, beta_high]
+        zeta_list = [zeta_low, zeta_high]
+        concentration_model_binned_uniform = BinnedHaloMass(self.astropy,
+                                                            log10_mass_bins,
+                                                            norm_list,
+                                                            beta_list,
+                                                            zeta_list,
+                                                            scatter=False)
+
+        c1 = concentration_model_binned_uniform.nfw_concentration(10** 7, 0.0)
+        c2 = concentration_model_binned_uniform.nfw_concentration(10 ** 8, 0.0)
+        c3 = concentration_model_binned_uniform.nfw_concentration(10 ** 9, 0.0)
+        npt.assert_almost_equal(c1, c2)
+        npt.assert_almost_equal(c1, c3)
+
+        norm_low = 8.0
+        norm_high = 18.0
+        beta_low = 0.2
+        beta_high = 0.9
+        zeta_low = -0.2
+        zeta_high = -0.6
+        norm_list = [norm_low, norm_high]
+        beta_list = [beta_low, beta_high]
+        zeta_list = [zeta_low, zeta_high]
+        model_binned = BinnedHaloMass(self.astropy,
+                                                log10_mass_bins,
+                                      norm_list,
+                                      beta_list,
+                                      zeta_list,
+                                                scatter=False)
+        model_low = ConcentrationPeakHeight(self.astropy,
+                                            norm_low,
+                                            zeta_low,
+                                            beta_low,
+                                            scatter=False,
+                                            redshift_evolution='RHO_CRIT')
+        model_high = ConcentrationPeakHeight(self.astropy,
+                                            norm_high,
+                                            zeta_high,
+                                            beta_high,
+                                            scatter=False,
+                                            redshift_evolution='RHO_CRIT')
+        c1 = model_low.nfw_concentration(10 ** 7.5, 1.0)
+        c2 = model_high.nfw_concentration(10 ** 9.5, 2.0)
+        c1_binned = model_binned.nfw_concentration(10 ** 7.5, 1.0)
+        c2_binned = model_binned.nfw_concentration(10 ** 9.5, 2.0)
+        npt.assert_almost_equal(c1, c1_binned)
+        npt.assert_almost_equal(c2, c2_binned)
+
+        npt.assert_raises(ValueError, model_binned.nfw_concentration, 10 ** 5.5, 1.0)
+        npt.assert_raises(ValueError, model_binned.nfw_concentration, 10 ** 11.5, 9.0)
+
+        log10_mass_bins = [[6, 7.5], [7.5, 9.0], [9, 10.7]]
+        norm_low = 2
+        norm_mid = 10.0
+        norm_high = 1000.0
+        beta = 0.0
+        zeta = 0.0
+        norm_list = [norm_low, norm_mid, norm_high]
+        beta_list = [beta, beta, beta]
+        zeta_list = [zeta, zeta, zeta]
+        concentration_model_binned = BinnedHaloMass(self.astropy,
+                                                        log10_mass_bins,
+                                                        norm_list,
+                                                        beta_list,
+                                                        zeta_list,
+                                                        scatter=False)
+        npt.assert_almost_equal(concentration_model_binned.nfw_concentration(10**7, 0.3), 2)
+        npt.assert_almost_equal(concentration_model_binned.nfw_concentration(10 ** 8, 0.3), 10)
+        npt.assert_almost_equal(concentration_model_binned.nfw_concentration(10 ** 9, 0.3), 1000)
+
+if __name__ == '__main__':
+    pytest.main()
