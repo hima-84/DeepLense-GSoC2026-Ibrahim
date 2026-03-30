@@ -168,10 +168,10 @@ result = agent.chat("Generate 5 CDM lensing images using Model_II")
 *12 strong lensing images generated from a single natural-language prompt.
 Clean-room (SNR ≈ 1000) data suitable for curriculum learning.*
 
-### ROC Curves — EfficientNet-B0
+### ROC Curves — EfficientNet-B0-Common_Test_I
 ![ROC Curves](outputs/roc_curves.png)
 
-### Confusion Matrices
+### Confusion Matrices_Common_Test_I
 ![Confusion Matrices](outputs/confusion_matrix.png)
 
 ---
