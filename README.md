@@ -71,7 +71,8 @@ Validation set: 3,000 samples (90/10 stratified split). Validation accuracy: **9
 
 ### Pre-trained Model Weights
 The best checkpoint (`best_efficientnet_b0.pth`) is available on Google Drive:
-> **[Download best_efficientnet_b0.pth]([https://drive.google.com/your-link-here](Dhttps://drive.google.com/file/d/1nOADHBdIG1lkcyDDg7Z2RlOgNm4Z7z9z/view?usp=sharing)**
+>
+ **[Download best_efficientnet_b0.pth](https://drive.google.com/file/d/1nOADHBdIG1lkcyDDg7Z2RlOgNm4Z7z9z/view?usp=sharing)**
 >
 
 To load:
@@ -84,7 +85,7 @@ model.eval()
 ```
 
 ### How to Run
-1. Download the [DeepLense dataset]([https://github.com/mwt5345/DeepLenseSim](https://drive.google.com/file/d/1ZEyNMEO43u3qhJAwJeBZxFBEYc_pVYZQ/view))
+1. **[Download Official DeepLense Dataset (Google Drive)](https://drive.google.com/file/d/1ZEyNMEO43u3qhJAwJeBZxFBEYc_pVYZQ/view)**
 2. Set `DATA_ROOT` and `SAVE_DIR` in the Configuration cell
 3. Run all cells top to bottom
 
