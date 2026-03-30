@@ -71,7 +71,7 @@ Validation set: 3,000 samples (90/10 stratified split). Validation accuracy: **9
 
 ### Pre-trained Model Weights
 The best checkpoint (`best_efficientnet_b0.pth`) is available on Google Drive:
-> **[Download best_efficientnet_b0.pth]([https://drive.google.com/your-link-here](https://drive.google.com/file/d/1nOADHBdIG1lkcyDDg7Z2RlOgNm4Z7z9z/view?usp=sharing)**
+> **[Download best_efficientnet_b0.pth][https://drive.google.com/your-link-here](https://drive.google.com/file/d/1nOADHBdIG1lkcyDDg7Z2RlOgNm4Z7z9z/view?usp=sharing)**
 >
 
 To load:
