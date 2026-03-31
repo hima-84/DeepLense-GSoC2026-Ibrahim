@@ -1,0 +1,9 @@
+pydantic-ai[gemini]>=1.0.0
+pydantic>=2.5.0
+numpy>=1.24
+matplotlib>=3.7
+scipy>=1.10
+# Optional — for full lenstronomy physics backend:
+# lenstronomy>=1.11.0
+# pyHalo>=1.4.0
+# astropy>=5.3
